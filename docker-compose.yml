@@ -16,7 +16,7 @@ services:
     volumes:
       # Mount data directory for persistent storage if needed
       - ./archive:/app/archive:ro
-      - ./icd10_vectors.npz:/app/icd10_vectors.npz:ro
+      # - ./icd10_vectors.npz:/app/icd10_vectors.npz:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
