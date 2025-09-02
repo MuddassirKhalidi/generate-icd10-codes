@@ -153,7 +153,12 @@ def search_icd10(query, top_k=3, verbose=False):
     scores = [x.item() if hasattr(x, 'item') else x for x in scores]
 
     if verbose:
-        descriptions_path = os.path.join("archive", "icd10data", "icd10_descriptions.json")
+        # Check if we're running in Docker container (app directory exists)
+        if os.path.exists("/app"):
+            base_path = "/app"
+        else:
+            base_path = "."  # Local development
+        descriptions_path = os.path.join(base_path, "archive", "icd10data", "icd10_descriptions.json")
         with open(descriptions_path, "r", encoding="utf-8") as f:
             icd10_description_dict = json.load(f)
             descriptions = [icd10_description_dict.get(code) for code in codes]
