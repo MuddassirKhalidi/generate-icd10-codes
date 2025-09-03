@@ -156,13 +156,8 @@ def search_icd10(query, top_k=3, verbose=False):
         # Try multiple possible paths for the descriptions file
         descriptions_path = os.path.join("icd10_descriptions.json")
         
-        for path in possible_paths:
-            if os.path.exists(path):
-                descriptions_path = path
-                break
-        
         if descriptions_path is None:
-            raise FileNotFoundError(f"Could not find icd10_descriptions.json in any of these locations: {possible_paths}")
+            raise FileNotFoundError(f"Could not find icd10_descriptions.json in any of these locations")
         
         with open(descriptions_path, "r", encoding="utf-8") as f:
             icd10_description_dict = json.load(f)
