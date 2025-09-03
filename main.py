@@ -43,8 +43,19 @@ class ICD10Response(BaseModel):
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
-    return {"message": "ICD-10 Code Generator API is running"}
+    """Health check endpoint with debug info"""
+    import os
+    # Debug endpoint to check file structure
+    debug_info = {
+        "message": "ICD-10 Code Generator API is running",
+        "current_dir": os.getcwd(),
+        "app_dir_exists": os.path.exists("/app"),
+        "archive_dir_exists": os.path.exists("archive"),
+        "archive_app_dir_exists": os.path.exists("/app/archive") if os.path.exists("/app") else False,
+        "descriptions_file_exists": os.path.exists("archive/icd10data/icd10_descriptions.json"),
+        "descriptions_file_app_exists": os.path.exists("/app/archive/icd10data/icd10_descriptions.json") if os.path.exists("/app") else False
+    }
+    return debug_info
 
 @app.post("/generate-icd10-codes", response_model=ICD10Response)
 async def generate_icd10_codes(request: ICD10Request):

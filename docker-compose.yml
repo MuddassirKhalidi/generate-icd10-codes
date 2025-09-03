@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: muddassirkhalidi/icd10-embeddings-model:1.0.0
+    image: muddassirkhalidi/icd10-embeddings-model:1.0.3
     container_name: icd10-api-container
     restart: unless-stopped
     ports:
@@ -11,10 +11,8 @@ services:
     environment:
       - PYTHONPATH=/app
       - ENVIRONMENT=production
-    volumes:
-      # Mount data directory for persistent storage if needed
-      - ./archive:/app/archive:ro
-      # - ./icd10_vectors.npz:/app/icd10_vectors.npz:ro
+    # volumes:
+      # No volumes needed - files are copied into the image
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s

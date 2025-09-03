@@ -28,9 +28,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-COPY icd10_vectors.npz /app/icd10_vectors.npz
+# Ensure archive directory is copied for standalone deployment
+COPY icd10_descriptions.json /app/icd10_descriptions.json
 
-COPY archive /app/archive
+COPY icd10_vectors.npz /app/icd10_vectors.npz
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app \
