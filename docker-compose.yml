@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: muddassirkhalidi/icd10-embeddings-model:1.0.3
+    image: muddassirkhalidi/icd10-embeddings-model:1.0.4
     container_name: icd10-api-container
     restart: unless-stopped
     ports:
