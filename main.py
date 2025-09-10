@@ -23,7 +23,7 @@ class ICD10Request(BaseModel):
         default=3, 
         description="Number of top ICD-10 codes to return for each query",
         ge=1,
-        le=10
+        le=500
     )
     include_descriptions: Optional[bool] = Field(
         default=False,
