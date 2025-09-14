@@ -1,0 +1,7 @@
+venv
+__pycache__
+icd10_vectors.npz
+icd10_descriptions.json
+archive/
+icd10_vectors_faiss.npz
+.DS_Store

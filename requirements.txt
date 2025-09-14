@@ -1,0 +1,10 @@
+numpy<2.0.0
+sentence-transformers>=2.2.2
+transformers>=4.30.0
+torch>=2.0.0
+fastapi
+uvicorn
+pydantic
+faiss-cpu>=1.8.0,<1.13
+mpmath>=1.3.0
+sympy>=1.12

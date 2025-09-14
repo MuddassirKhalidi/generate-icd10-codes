@@ -1,0 +1,27 @@
+services:
+  icd10-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: muddassirkhalidi/icd10-embeddings-model:latest
+    container_name: icd10-api-container
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+    # volumes:
+      # No volumes needed - files are copied into the image
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - icd10-network
+
+networks:
+  icd10-network:
+    driver: bridge
