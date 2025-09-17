@@ -138,7 +138,7 @@ def faiss_get_icd10_similarities(query, top_k=3):
 
     return sorted_vocab, sorted_similarities
 
-def faiss_search_icd10(query, top_k=3, verbose=False):
+def faiss_search_icd10(query, top_k=10, verbose=True):
     """
     Search the ICD-10 vocabulary for terms similar to the query using FAISS.
     Optionally return icd10 descriptions alongside codes and scores.
@@ -154,16 +154,18 @@ def faiss_search_icd10(query, top_k=3, verbose=False):
         Else:
             tuple: (codes, scores)
     """
+    print('Conducting FAISS search...')
     codes, scores = faiss_get_icd10_similarities(query, top_k)
     codes = [x.item() if hasattr(x, 'item') else x for x in codes]
     scores = [x.item() if hasattr(x, 'item') else x for x in scores]
 
     if verbose:
+        print('Getting ICD-10 descriptions...')
         descriptions_path = os.path.join("icd10_descriptions.json")
         
         if not os.path.exists(descriptions_path):
             raise FileNotFoundError(f"Could not find icd10_descriptions.json at {descriptions_path}")
-        
+        print('Loading ICD-10 descriptions...')
         with open(descriptions_path, "r", encoding="utf-8") as f:
             icd10_description_dict = json.load(f)
             descriptions = [icd10_description_dict.get(code) for code in codes]
@@ -172,5 +174,6 @@ def faiss_search_icd10(query, top_k=3, verbose=False):
     return codes, scores
 
 if __name__ == "__main__":
-    faiss_update_cached_embeddings()
-    
+    query = '''مرحباً، منذ متى وأنت تسعل؟ منذ حوالي ثلاثة أسابيع، خاصة في الليل، وأحياناً مع صوت صفير. هل تخرج بلغم؟ نعم، أصفر وأحياناً أخضر. هل لديك حرارة؟ خفيفة، تأتي وتذهب. هل هناك ألم في الصدر؟ قليلاً، خاصة عند التنفس العميق. هل تدخن؟ كنت أدخن، توقفت منذ عامين. هل تشعر بضيق نفس عند صعود الدرج؟ نعم، أكثر من قبل. قد يكون هذا التهاب قصبات أو ربو خفيف. سنطلب صورة أشعة للصدر واختبار وظائف الرئة. هل سافرت مؤخراً؟ لا، لكن أصبت بالإنفلونزا قبل شهر. قد يكون هذا السبب. في هذه الأثناء، تجنب الهواء البارد والغبار. إذا ساءت الأعراض، عد فوراً.'''
+    print('Starting to search for ICD-10 codes...')
+    print(faiss_search_icd10(query))

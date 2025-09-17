@@ -31,7 +31,8 @@ COPY . .
 # Ensure archive directory is copied for standalone deployment
 COPY icd10_descriptions.json /app/icd10_descriptions.json
 
-COPY icd10_vectors.npz /app/icd10_vectors.npz
+# Copy the correct vector file
+COPY icd10_vectors_faiss.npz /app/icd10_vectors_faiss.npz
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app \

@@ -5,3 +5,4 @@ icd10_descriptions.json
 archive/
 icd10_vectors_faiss.npz
 .DS_Store
+test_request.json
