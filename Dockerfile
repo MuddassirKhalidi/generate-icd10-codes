@@ -11,7 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Update package lists and install system dependencies
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
     build-essential \
     curl \
