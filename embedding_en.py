@@ -147,7 +147,7 @@ def search_icd10(query, top_k=3, verbose=False):
     scores = [x.item() if hasattr(x, 'item') else x for x in scores]
 
     if verbose:
-        with open("backend/archive/icd10data/icd10_descriptions.json", "r", encoding="utf-8") as f:
+        with open("icd10_descriptions.json", "r", encoding="utf-8") as f:
             icd10_description_dict = json.load(f)
             descriptions = [icd10_description_dict.get(code) for code in codes]
         return codes, scores, descriptions

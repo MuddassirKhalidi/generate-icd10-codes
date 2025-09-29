@@ -47,7 +47,7 @@ async def root():
         "app_dir_exists": os.path.exists("/app"),
         "archive_dir_exists": os.path.exists("archive"),
         "archive_app_dir_exists": os.path.exists("/app/archive") if os.path.exists("/app") else False,
-        "descriptions_file_exists": os.path.exists("backend/archive/icd10data/icd10_descriptions.json"),
+        "descriptions_file_exists": os.path.exists("icd10_descriptions.json"),
         "vectors_file_exists": os.path.exists("icd10_vectors.npz")
     }
     return debug_info
