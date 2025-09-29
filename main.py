@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uvicorn
-from id_extractor import extract_icd10_with_validation
+from icd_extractor import extract_icd10_with_validation
 
 # Initialize FastAPI app
 app = FastAPI(
