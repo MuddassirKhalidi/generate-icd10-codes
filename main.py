@@ -73,7 +73,7 @@ async def generate_icd10_codes(request: ICD10Request):
         # This returns: [{"diagnosis": str, "matches": [{"code": str, "description": str, "score": float}]}]
         validated_results = extract_icd10_with_validation(
             consultation=request.query,
-            top_k=request.top_k,
+            top_k=1,
             threshold=0.6
         )
         
