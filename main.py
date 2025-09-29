@@ -2,13 +2,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uvicorn
-from faiss_embedding import faiss_search_icd10
+from id_extractor import extract_icd10_with_validation
 
 # Initialize FastAPI app
 app = FastAPI(
     title="ICD-10 Code Generator API",
-    description="API for generating ICD-10 codes from medical text queries",
-    version="1.0.0"
+    description="API for generating ICD-10 codes from medical text queries using LLM extraction",
+    version="2.0.0"
 )
 
 # Request model
@@ -20,7 +20,7 @@ class ICD10Request(BaseModel):
     )
     top_k: Optional[int] = Field(
         default=3, 
-        description="Number of top ICD-10 codes to return",
+        description="Number of top ICD-10 codes to return per diagnosis",
         ge=1,
         le=500
     )
@@ -42,23 +42,25 @@ async def root():
     import os
     # Debug endpoint to check file structure
     debug_info = {
-        "message": "ICD-10 Code Generator API is running",
+        "message": "ICD-10 Code Generator API is running (LLM-powered)",
         "current_dir": os.getcwd(),
         "app_dir_exists": os.path.exists("/app"),
         "archive_dir_exists": os.path.exists("archive"),
         "archive_app_dir_exists": os.path.exists("/app/archive") if os.path.exists("/app") else False,
-        "descriptions_file_exists": os.path.exists("archive/icd10data/icd10_descriptions.json"),
-        "descriptions_file_app_exists": os.path.exists("/app/archive/icd10data/icd10_descriptions.json") if os.path.exists("/app") else False
+        "descriptions_file_exists": os.path.exists("backend/archive/icd10data/icd10_descriptions.json"),
+        "vectors_file_exists": os.path.exists("icd10_vectors.npz")
     }
     return debug_info
 
 @app.post("/generate-icd10-codes", response_model=ICD10Response)
 async def generate_icd10_codes(request: ICD10Request):
     """
-    Generate ICD-10 codes for a medical text query.
+    Generate ICD-10 codes for a medical text query using LLM extraction.
     
-    This endpoint takes a medical text query and returns the most similar
-    ICD-10 codes along with their similarity scores and descriptions.
+    This endpoint takes a medical consultation text and:
+    1. Uses GPT to extract diagnoses with reasoning
+    2. Validates each diagnosis using semantic search
+    3. Returns the most similar ICD-10 codes with scores
     """
     try:
         if not request.query.strip():
@@ -67,26 +69,42 @@ async def generate_icd10_codes(request: ICD10Request):
                 detail="Empty query is not allowed"
             )
         
-        # Use the existing search_icd10 function
-        if request.include_descriptions:
-            codes, scores, descriptions = faiss_search_icd10(
-                query=request.query, 
-                top_k=request.top_k, 
-                verbose=True
-            )
-        else:
-            codes, scores = faiss_search_icd10(
-                query=request.query, 
-                top_k=request.top_k, 
-                verbose=False
-            )
-            descriptions = None
+        # Extract and validate ICD-10 codes using LLM + embedding validation
+        # This returns: [{"diagnosis": str, "matches": [{"code": str, "description": str, "score": float}]}]
+        validated_results = extract_icd10_with_validation(
+            consultation=request.query,
+            top_k=request.top_k,
+            threshold=0.6
+        )
+        
+        # Flatten results to maintain API compatibility
+        codes = []
+        scores = []
+        descriptions = []
+        
+        for result in validated_results:
+            if result["matches"]:
+                # Add all matches for this diagnosis
+                for match in result["matches"]:
+                    codes.append(match["code"])
+                    scores.append(match["score"])
+                    descriptions.append(match["description"])
+            else:
+                # No valid matches found - could optionally include with score 0.0
+                # For now, we skip diagnoses without matches to maintain quality
+                pass
+        
+        # If no codes were found at all, return empty lists
+        if not codes:
+            codes = []
+            scores = []
+            descriptions = [] if request.include_descriptions else None
         
         return ICD10Response(
             query=request.query,
             codes=codes,
             scores=scores,
-            descriptions=descriptions
+            descriptions=descriptions if request.include_descriptions else None
         )
         
     except Exception as e:
@@ -100,14 +118,21 @@ async def health_check():
     """Detailed health check endpoint"""
     try:
         # Test if embeddings are loaded
-        from faiss_embedding import faiss_load_embeddings
-        embedding_dict, icd10_vocab, pro_vectors, faiss_index = faiss_load_embeddings()
+        from embedding_en import load_embeddings
+        import os
+        
+        embedding_dict, icd10_vocab, pro_vectors = load_embeddings()
+        
+        # Check if OpenAI API key is set
+        openai_key_set = bool(os.getenv("OPENAI_API_KEY"))
         
         return {
             "status": "healthy",
             "embeddings_loaded": True,
             "vocabulary_size": len(icd10_vocab),
-            "embedding_dimension": pro_vectors.shape[1] if len(pro_vectors) > 0 else 0
+            "embedding_dimension": pro_vectors.shape[1] if len(pro_vectors) > 0 else 0,
+            "openai_configured": openai_key_set,
+            "extraction_method": "LLM + Semantic Validation"
         }
     except Exception as e:
         return {
