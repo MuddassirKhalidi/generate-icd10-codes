@@ -23,7 +23,9 @@ RUN apt-get update --fix-missing && \
 COPY requirements.txt .
 
 # Install Python dependencies
+RUN pip install --no-cache-dir torch==2.2.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # Copy application code
 COPY . .
