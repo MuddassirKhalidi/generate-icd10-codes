@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uvicorn
-from icd_extractor import extract_icd10_with_validation
+from modules.icd_extractor import extract_icd10_with_validation
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -11,9 +12,26 @@ app = FastAPI(
     version="2.0.0"
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://aim-doc-assist.vercel.app",
+        "http://91.98.81.85:8000",
+        "https://91.98.81.85:8000"  # Add HTTPS version
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 # Request model
 class ICD10Request(BaseModel):
-    query: str = Field(
+    lang: str = Field(
+        ..., 
+        description="Language of the medical text query",
+        example="en"
+    )
+    text: str = Field(
         ..., 
         description="Medical text query to convert to ICD-10 codes",
         example="chest pain"
@@ -24,17 +42,12 @@ class ICD10Request(BaseModel):
         ge=1,
         le=500
     )
-    include_descriptions: Optional[bool] = Field(
-        default=True,
-        description="Whether to include ICD-10 descriptions in the response"
-    )
 
 # Response models
 class ICD10Response(BaseModel):
-    query: str
     codes: List[str]
     scores: List[float]
-    descriptions: Optional[List[str]] = None
+    descriptions: List[str]
 
 @app.get("/")
 async def root():
@@ -52,7 +65,7 @@ async def root():
     }
     return debug_info
 
-@app.post("/generate-icd10-codes", response_model=ICD10Response)
+@app.post("/generate_icd10_codes", response_model=ICD10Response)
 async def generate_icd10_codes(request: ICD10Request):
     """
     Generate ICD-10 codes for a medical text query using LLM extraction.
@@ -63,16 +76,16 @@ async def generate_icd10_codes(request: ICD10Request):
     3. Returns the most similar ICD-10 codes with scores
     """
     try:
-        if not request.query.strip():
+        if not request.text.strip():
             raise HTTPException(
                 status_code=400, 
-                detail="Empty query is not allowed"
+                detail="Empty text is not allowed"
             )
         
         # Extract and validate ICD-10 codes using LLM + embedding validation
         # This returns: [{"diagnosis": str, "matches": [{"code": str, "description": str, "score": float}]}]
         validated_results = extract_icd10_with_validation(
-            consultation=request.query,
+            consultation=request.text,
             top_k=1,
             threshold=0.6
         )
@@ -98,13 +111,12 @@ async def generate_icd10_codes(request: ICD10Request):
         if not codes:
             codes = []
             scores = []
-            descriptions = [] if request.include_descriptions else None
+            descriptions = []
         
         return ICD10Response(
-            query=request.query,
             codes=codes,
             scores=scores,
-            descriptions=descriptions if request.include_descriptions else None
+            descriptions=descriptions
         )
         
     except Exception as e:
@@ -118,7 +130,7 @@ async def health_check():
     """Detailed health check endpoint"""
     try:
         # Test if embeddings are loaded
-        from embedding_en import load_embeddings
+        from modules.embedding_en import load_embeddings
         import os
         
         embedding_dict, icd10_vocab, pro_vectors = load_embeddings()

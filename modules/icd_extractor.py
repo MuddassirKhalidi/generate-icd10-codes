@@ -3,7 +3,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from embedding_en import search_icd10
+from modules.embedding_en import search_icd10
 import json
 
 load_dotenv()
