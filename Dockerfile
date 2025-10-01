@@ -30,6 +30,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Copy SSL certificates
+COPY ssl/ /app/ssl/
+
 # Ensure archive directory is copied for standalone deployment
 COPY icd10_descriptions.json /app/icd10_descriptions.json
 

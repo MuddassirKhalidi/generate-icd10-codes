@@ -154,4 +154,23 @@ async def health_check():
         }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    
+    # Check if SSL certificates are available
+    ssl_keyfile = os.getenv("SSL_KEYFILE", "ssl/server.key")
+    ssl_certfile = os.getenv("SSL_CERTFILE", "ssl/server.crt")
+    
+    # Run with HTTPS if certificates exist, otherwise HTTP
+    if os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile):
+        print("Starting server with HTTPS...")
+        uvicorn.run(
+            app, 
+            host="0.0.0.0", 
+            port=8000,
+            ssl_keyfile=ssl_keyfile,
+            ssl_certfile=ssl_certfile
+        )
+    else:
+        print("SSL certificates not found, starting server with HTTP...")
+        print("For production, consider using a reverse proxy with SSL termination")
+        uvicorn.run(app, host="0.0.0.0", port=8000)
