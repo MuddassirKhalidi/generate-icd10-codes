@@ -16,6 +16,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://localhost:8001",
         "https://aim-doc-assist.vercel.app",
         "http://91.98.81.85:8000",
         "https://91.98.81.85:8000"  # Add HTTPS version
@@ -154,23 +155,4 @@ async def health_check():
         }
 
 if __name__ == "__main__":
-    import os
-    
-    # Check if SSL certificates are available
-    ssl_keyfile = os.getenv("SSL_KEYFILE", "ssl/server.key")
-    ssl_certfile = os.getenv("SSL_CERTFILE", "ssl/server.crt")
-    
-    # Run with HTTPS if certificates exist, otherwise HTTP
-    if os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile):
-        print("Starting server with HTTPS...")
-        uvicorn.run(
-            app, 
-            host="0.0.0.0", 
-            port=8000,
-            ssl_keyfile=ssl_keyfile,
-            ssl_certfile=ssl_certfile
-        )
-    else:
-        print("SSL certificates not found, starting server with HTTP...")
-        print("For production, consider using a reverse proxy with SSL termination")
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
