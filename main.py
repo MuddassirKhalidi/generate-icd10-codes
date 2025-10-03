@@ -16,6 +16,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://localhost:8001",
         "https://aim-doc-assist.vercel.app",
         "http://91.98.81.85:8000",
         "https://91.98.81.85:8000"  # Add HTTPS version
