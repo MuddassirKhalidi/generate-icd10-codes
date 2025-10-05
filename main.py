@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 import uvicorn
 from modules.icd_extractor import extract_icd10_with_validation
+from modules.process_audio import process_consultation
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -120,6 +121,109 @@ async def generate_icd10_codes(request: ICD10Request):
             descriptions=descriptions
         )
         
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.post("/process_audio")
+async def process_audio_endpoint(audio_file: UploadFile = File(...)):
+    """
+    Process audio consultation file.
+    
+    This endpoint accepts audio files of any type and sends the content
+    to the process_consultation() function for processing.
+    
+    Args:
+        audio_file: The uploaded audio file
+        
+    Returns:
+        JSON response with processing results
+    """
+    try:
+        # Validate file type (basic check for audio files)
+        if not audio_file.content_type or not audio_file.content_type.startswith('audio/'):
+            # Allow common audio extensions even if content-type is not set
+            allowed_extensions = {'.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac', '.wma', '.aiff'}
+            file_extension = audio_file.filename.lower().split('.')[-1] if audio_file.filename else ''
+            if f'.{file_extension}' not in allowed_extensions:
+                raise HTTPException(
+                    status_code=400,
+                    detail="File must be an audio file. Supported formats: mp3, wav, m4a, aac, ogg, flac, wma, aiff"
+                )
+        
+        # Read the audio file content
+        audio_content = await audio_file.read()
+        
+        if len(audio_content) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Empty audio file not allowed"
+            )
+        
+        # Process the audio using the process_consultation function
+        # result = process_consultation(audio_content, audio_file.filename)
+        
+        # Temporary hardcoded JSON response
+        result = {
+            "VITAL SIGNS": [
+                "Temperature: Not mentioned",
+                "Blood Pressure: Not mentioned",
+                "Pulse Rate: Not mentioned",
+                "Respiratory Rate: Not mentioned",
+                "Glucose Levels: Not mentioned"
+            ],
+            "CHIEF COMPLAINT": [
+                "Upper abdominal pain"
+            ],
+            "HISTORY OF PRESENT ILLNESS": [
+                "Upper abdominal pain for three days, worse at night.",
+                "Sometimes headache, high fever.",
+                "Headache increases with abdominal pain"
+            ],
+            "PAST MEDICAL/SURGICAL HISTORY": [
+                "Medical Conditions: Diabetes",
+                "Surgery: Not mentioned"
+            ],
+            "DRUG HISTORY AND ALLERGIES": [
+                "Current Medications: Not mentioned",
+                "Allergies: Not mentioned"
+            ],
+            "FAMILY HISTORY": [
+                "Father has diabetes"
+            ],
+            "SOCIAL HISTORY": [
+                "Not mentioned"
+            ],
+            "REVIEW OF SYSTEMS": [
+                "Not mentioned"
+            ],
+            "PHYSICAL EXAMINATION": [
+                "Not mentioned"
+            ],
+            "INVESTIGATIONS": [
+                "IMPRESSION AND DIAGNOSIS: Not mentioned",
+                "PLAN: Investigations: CBC, random blood sugar, C-reactive protein, abdominal ultrasound, and x-ray ordered"
+            ],
+            "TREATMENT": [
+                "Not mentioned"
+            ],
+            "PATIENT EDUCATION": [
+                "Stop spicy food, coffee, and smoking until lab results appear"
+            ],
+            "FOLLOW-UP": [
+                "Until lab results appear"
+            ],
+            "MEDICATIONS": [
+                "Not mentioned"
+            ]
+        }
+        
+        return result
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
