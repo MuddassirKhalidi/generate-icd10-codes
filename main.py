@@ -165,7 +165,7 @@ async def process_audio_endpoint(audio_file: UploadFile = File(...)):
         transcript = transcribe_audio(audio_content, audio_file.filename)
         
         result = process_consultation(transcript)
-        
+        print(result)
         return result
         
     except HTTPException:
