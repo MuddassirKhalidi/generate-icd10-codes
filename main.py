@@ -164,7 +164,38 @@ async def process_audio_endpoint(audio_file: UploadFile = File(...)):
         
         transcript = transcribe_audio(audio_content, audio_file.filename)
         
-        result = process_consultation(transcript)
+        # Generate structured medical report
+        medical_report = process_consultation(transcript)
+        
+        # Extract ICD-10 codes from the transcript
+        validated_results = extract_icd10_with_validation(
+            consultation=transcript,
+            top_k=1,
+            threshold=0.6
+        )
+        
+        # Flatten ICD-10 results
+        codes = []
+        scores = []
+        descriptions = []
+        
+        for result in validated_results:
+            if result["matches"]:
+                for match in result["matches"]:
+                    codes.append(match["code"])
+                    scores.append(match["score"])
+                    descriptions.append(match["description"])
+        
+        # Combine medical report with ICD-10 codes
+        result = {
+            "medical_report": medical_report,
+            "icd10_codes": {
+                "codes": codes,
+                "scores": scores,
+                "descriptions": descriptions
+            }
+        }
+        
         print(result)
         return result
         
