@@ -6,5 +6,6 @@ icd10_vectors.npz
 .DS_Store
 test_request.json
 ssl
+.env
 .*
 
